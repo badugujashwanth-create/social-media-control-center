@@ -1,5 +1,11 @@
 ﻿# Social Media Control Center (SMCC)
 
+> **Status: MVP** — API tests, frontend lint, and the frontend production build pass; real publishing still requires provider approval and credentials.
+
+[![Watch the Social Media Control Center demo](docs/demo/demo-thumbnail.png)](docs/demo/demo.webm)
+
+> Watch the locally recorded authentication surface and architecture overview; no real social account is connected.
+
 SMCC is a monorepo MVP that connects social accounts, provides a unified dashboard, and publishes a single post to multiple platforms through official APIs only.
 
 ## Monorepo Structure
