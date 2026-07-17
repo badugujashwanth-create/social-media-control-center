@@ -6,6 +6,8 @@
 
 > Watch the locally recorded authentication surface and architecture overview; no real social account is connected.
 
+[Case study](docs/CASE_STUDY.md) · [Architecture](docs/ARCHITECTURE.md) · [Test evidence](docs/TEST_REPORT.md) · [Interview guide](docs/INTERVIEW_GUIDE.md)
+
 SMCC is a monorepo MVP that connects social accounts, provides a unified dashboard, and publishes a single post to multiple platforms through official APIs only.
 
 ## Monorepo Structure
