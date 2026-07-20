@@ -1,0 +1,27 @@
+{
+    "generated_at_utc":  "2026-07-20T16:37:26.9567693Z",
+    "duration_seconds":  245.368,
+    "width":  1280,
+    "height":  720,
+    "video_codec":  "vp9",
+    "audio_codec":  "opus",
+    "browser":  "Playwright Chromium 143 (bundled build 1200)",
+    "data_boundary":  "Deterministic synthetic workspace; provider calls disabled",
+    "workflow":  "Login -\u003e account boundaries -\u003e compose -\u003e per-provider progress/results -\u003e retry evidence -\u003e analytics",
+    "captions":  "demo-captions.vtt",
+    "sha256":  "ec54b7e7f19fff9ba0f7bd843b801b6e36a41a951a8fd653ad034f4d2298e9e1",
+    "bytes":  7073828,
+    "verification_frames":  10,
+    "frame_timestamps":  [
+                             "00:00:10",
+                             "00:00:35",
+                             "00:01:00",
+                             "00:01:25",
+                             "00:01:50",
+                             "00:02:01",
+                             "00:02:40",
+                             "00:03:05",
+                             "00:03:30",
+                             "00:03:55"
+                         ]
+}

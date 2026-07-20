@@ -1,311 +1,109 @@
-﻿# Social Media Control Center (SMCC)
+# Social Media Control Center
 
-> **Status: MVP** — API tests, frontend lint, and the frontend production build pass; real publishing still requires provider approval and credentials.
+> **Status: verified local MVP.** The application, API, worker boundaries, safe demo, tests, build, and audits are verified. Live social publishing is not claimed; it still requires approved provider apps, credentials, and sandbox validation.
 
-[![Watch the Social Media Control Center demo](docs/demo/demo-thumbnail.png)](docs/demo/demo.webm)
+[![Watch the 4-minute Social Media Control Center walkthrough](docs/demo/demo-thumbnail.png)](docs/demo/demo.webm)
 
-> Watch the locally recorded authentication surface and architecture overview; no real social account is connected.
+The walkthrough runs the real Next.js interface against a deterministic local demo API. Every account, publishing result, external ID, and chart is synthetic, and the verifier confirms that no social provider is contacted.
 
-[Case study](docs/CASE_STUDY.md) · [Architecture](docs/ARCHITECTURE.md) · [Test evidence](docs/TEST_REPORT.md) · [Interview guide](docs/INTERVIEW_GUIDE.md)
+[Case study](docs/CASE_STUDY.md) · [Architecture](docs/ARCHITECTURE.md) · [Test evidence](docs/TEST_REPORT.md) · [UX audit](docs/audit/UX_AUDIT.md) · [Security](SECURITY.md) · [Release notes](docs/RELEASE_NOTES_v1.0.0.md)
 
-SMCC is a monorepo MVP that connects social accounts, provides a unified dashboard, and publishes a single post to multiple platforms through official APIs only.
+## Product thesis
 
-## Monorepo Structure
+Cross-platform publishing should expose provider differences instead of hiding them. SMCC keeps credentials and provider calls behind a FastAPI boundary, creates one delivery target per account, queues retryable work, and shows the status of every target independently.
 
-```
-/smcc
-  /apps
-    /web        # Next.js 16 App Router frontend
-    /api        # FastAPI backend + RQ worker
-  /packages
-    /shared     # shared platform/status constants (TS + Python)
-  /infra
-    docker-compose.yml
-```
+## Verified workflow
 
-## Architecture Overview
+1. Sign in to an application workspace.
+2. Review connected-account capabilities and token health.
+3. Compose text with an optional link or supported image.
+4. Select explicit accounts or post to all.
+5. Inspect `queued`, `publishing`, and terminal per-provider results.
+6. Review bounded retry evidence and conservative snapshot analytics.
 
-- Frontend: Next.js 16 + TypeScript + Tailwind + shadcn-style components
-- Backend: FastAPI + SQLAlchemy 2.0 + Alembic
-- Database: PostgreSQL
-- Queue: Redis + RQ
-- Object storage: MinIO (S3-compatible local dev)
-- Auth: email/password + JWT
-- OAuth token storage: encrypted at rest with Fernet via `TOKEN_ENCRYPTION_KEY`
-- Observability: structured JSON logs + request IDs
+## Architecture
 
-## MVP Features
+- **Web:** Next.js 16, TypeScript, Tailwind, React Hook Form, Zod, Recharts
+- **API:** FastAPI, Pydantic Settings, SQLAlchemy 2, Alembic
+- **Persistence:** PostgreSQL
+- **Jobs:** Redis and RQ with bounded retry intervals
+- **Media:** MinIO-compatible object storage for local development
+- **Security:** bcrypt passwords, HS256 application sessions, Fernet-encrypted provider tokens, production configuration guards, CORS and rate limiting
+- **Connectors:** Facebook Pages, LinkedIn, and X boundaries; Instagram remains a stated stub
 
-- Sign up / login
-- Connect accounts via OAuth (Facebook Pages, LinkedIn, X)
-- Instagram connector scaffold (stub + TODO)
-- Developer mode token paste endpoint (`POST /api/v1/accounts/dev`)
-- Compose post (text + optional link + optional image upload)
-- One-click publish to selected accounts or Post to All
-- Per-target status: `queued | publishing | success | failed | rate_limited | needs_reauth`
-- Retry handling for transient failures with exponential backoff via RQ retries
-- Unified dashboard and posts history
-- Analytics:
-  - daily post counts
-  - follower snapshot deltas
-  - unfollower availability by connector (official API only)
+## Evidence
 
-## Environment Variables
+| Check | Verified result |
+|---|---|
+| API tests | 19 passed |
+| Frontend lint | Passed |
+| Production static build | Passed, 10 routes plus not-found |
+| Browser workflow | Passed in bundled Chromium with zero external requests |
+| Responsive audit | 390 px reflow, keyboard focus, mobile navigation, Escape close, and reduced motion passed |
+| JavaScript dependencies | `npm audit --audit-level=moderate`: 0 vulnerabilities |
+| Python dependencies | `pip-audit -r requirements.txt`: no known vulnerabilities |
+| Secret scan | Current tracked release archive: no leaks found |
+| Walkthrough | 245.368 seconds, 1280×720, VP9 video, Opus narration, captions, 10 inspected frames |
 
-Copy templates:
+See [docs/TEST_REPORT.md](docs/TEST_REPORT.md) for exact commands and limits.
 
-- `apps/api/.env.example` -> `apps/api/.env`
-- `apps/web/.env.example` -> `apps/web/.env.local`
-- Optional unified backend key: `AYRSHARE_API_KEY` in `apps/api/.env`
+## Run the production-shaped safe demo
 
-Generate Fernet key:
-
-```bash
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-```
-
-Never commit real production secrets. The values in `apps/api/.env.example` are placeholders only.
-
-## Run Locally
-
-1. Start infra:
-```bash
-cd smcc/infra
-docker compose up -d
-```
-
-2. Set `TOKEN_ENCRYPTION_KEY`:
-```bash
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-```
-
-PowerShell example:
-```powershell
-$env:TOKEN_ENCRYPTION_KEY="<paste-generated-key>"
-```
-
-3. Run database migrations:
-```bash
-cd smcc/apps/api
-alembic upgrade head
-```
-
-4. Start API on `:8000` (bind all interfaces in dev):
-```bash
-cd smcc/apps/api
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-5. Start RQ worker:
-```bash
-cd smcc/apps/api
-rq worker -u redis://localhost:6379/0 publish snapshot
-```
-
-6. Start web on `:3000`:
-```bash
-cd smcc/apps/web
-npm install
-npm run dev -- --port 3000
-```
-
-- API: http://localhost:8000
-- Web: http://localhost:3000
-
-## Tests
-
-```bash
-cd apps/api
-pytest
-```
-
-Included tests:
-- token encryption/decryption
-- publish job state transitions
-- connector publish (X) with mocked client
-
-## Deploy On Netlify
-
-Frontend site:
-
-- Branch: `main`
-- Base directory: `apps/web`
-- Build command: `npm run netlify-build`
-- Publish directory: `out`
-- Functions directory: leave blank
-
-Required frontend environment variables:
-
-- `NEXT_PUBLIC_API_BASE` set to your deployed Render API origin, for example `https://your-render-api.onrender.com`
-
-Optional frontend environment variables:
-
-- `NEXT_PUBLIC_DEV_MODE=false`
-
-Notes:
-
-- A root `netlify.toml` is included, so Netlify can read the build settings from the repository.
-- The frontend is configured for static export in production, and `npm run netlify-build` verifies that `apps/web/out` exists after the build.
-- On Next.js 16, static export is produced by `output: 'export'` in `next.config.js`; the old `next export` CLI command is no longer used.
-- If the site already has a custom Publish directory set in the Netlify UI, change it to `out` when the Base directory is `apps/web`.
-- Set `NEXT_PUBLIC_API_BASE` to your deployed API origin, for example `https://social-media-management-api.onrender.com`.
-- If the Netlify site name you want is already taken, choose any unique temporary site name and rename it later if an available name is found.
-
-## Deploy On Render
-
-API web service:
-
-- Branch: `main`
-- Root Directory: `apps/api`
-- Build Command: `pip install -r requirements.txt`
-- Pre-Deploy Command: `alembic upgrade head`
-- Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- Health Check Path: `/health`
-
-Required API environment variables:
-
-- `ENVIRONMENT=production`
-- `SECRET_KEY`
-- `TOKEN_ENCRYPTION_KEY`
-- `POSTGRES_DSN`
-- `REDIS_URL`
-- `APP_PUBLIC_URL`
-- `API_PUBLIC_URL`
-- `FRONTEND_BASE_URL`
-
-Generate the Fernet key used by `TOKEN_ENCRYPTION_KEY`:
-
-```bash
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-```
-
-Notes:
-
-- Render does not load your local `apps/api/.env`, so you must set the variables above in the Render dashboard.
-- `TOKEN_ENCRYPTION_KEY` is required at application startup. If it is missing, the deploy will boot-fail before serving traffic.
-- If you use Render Postgres, set `POSTGRES_DSN` with the SQLAlchemy driver prefix:
-  `postgresql+psycopg2://...`
-- Set `APP_PUBLIC_URL` and `FRONTEND_BASE_URL` to your Netlify frontend URL, for example `https://your-netlify-site.netlify.app`.
-- Set `API_PUBLIC_URL` to your Render API URL, for example `https://your-render-api.onrender.com`.
-
-Additional services:
-
-- Background worker:
-  - Root Directory: `apps/api`
-  - Build Command: `pip install -r requirements.txt`
-  - Start Command: `rq worker -u $REDIS_URL publish snapshot`
-- Postgres database
-- Redis / Key Value service
-
-Optional variables:
-
-- S3 / object storage for uploads:
-  - `S3_ENDPOINT`
-  - `S3_ACCESS_KEY`
-  - `S3_SECRET_KEY`
-  - `S3_BUCKET`
-  - `S3_REGION`
-  - `S3_PUBLIC_BASE`
-- OAuth providers:
-  - `FACEBOOK_CLIENT_ID`
-  - `FACEBOOK_CLIENT_SECRET`
-  - `FACEBOOK_REDIRECT_URI`
-  - `FACEBOOK_OAUTH_SCOPES=pages_manage_posts,pages_read_engagement,pages_show_list`
-  - `LINKEDIN_CLIENT_ID`
-  - `LINKEDIN_CLIENT_SECRET`
-  - `LINKEDIN_REDIRECT_URI`
-  - `LINKEDIN_OAUTH_SCOPES=openid profile w_member_social`
-  - `X_CLIENT_ID`
-  - `X_CLIENT_SECRET`
-  - `X_REDIRECT_URI`
-  - `X_OAUTH_SCOPES=tweet.write users.read offline.access`
-
-## Using vendor repos
-
-SMCC vendor references live under `vendor/`:
-
-- `vendor/postiz-app`
-- `vendor/django-social-scheduler`
-- `vendor/socialmediascheduler`
-- `vendor/ayrshare-js`
-- `vendor/ayrshare-python`
-
-Clone with submodules:
-
-```bash
-git clone --recurse-submodules <your-smcc-repo-url>
-cd smcc
-git submodule update --init --recursive
-```
-
-Bootstrap and update helpers:
-
-```bash
-./scripts/vendor_setup.sh
-```
+Prerequisites: Node.js 22+, Python 3.13+, and PowerShell on Windows for the all-in-one recorder.
 
 ```powershell
-.\scripts\vendor_setup.ps1
+python -m pip install -r apps/api/requirements.txt
+npm ci --prefix apps/web
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\record-demo.ps1 -SmokeOnly
 ```
 
-Warning on Postiz AGPL:
+The script builds the static frontend, starts the provider-isolated demo API and clean-route server, verifies the API workflow, and drives the complete browser path. Run without `-SmokeOnly` only when a new 3+ minute release video is required.
 
-- `postiz-app` is AGPL-3.0.
-- Do not copy Postiz code into SMCC unless SMCC is intentionally AGPL-compliant.
-- Safe options: use as reference, or run Postiz as a separate service via API.
+Demo credentials are labels rather than real secrets:
 
-## Real OAuth Setup
+```text
+recruiter@example.com
+demo-pass-2026
+```
 
-- Meta (Facebook Pages):
-  - Create a Meta app in Meta for Developers and add Facebook Login.
-  - Add `https://your-render-api.onrender.com/oauth/facebook/callback` as a valid OAuth redirect URI.
-  - Request permissions for Pages posting (`pages_manage_posts`, `pages_read_engagement`, `pages_show_list`).
-  - If Facebook shows "Invalid Scopes", the Meta app does not have access to the requested Page permissions yet. Keep the scopes for publishing, but complete Meta app review or test with an app role that is allowed to request them.
-  - Put `FACEBOOK_CLIENT_ID` and `FACEBOOK_CLIENT_SECRET` in `apps/api/.env`.
-- LinkedIn:
-  - Create an app in LinkedIn Developer Portal.
-  - Add `https://your-render-api.onrender.com/oauth/linkedin/callback` as an authorized redirect URL.
-  - Enable products/scopes needed for member posting (`w_member_social`, plus OpenID profile scopes).
-  - The default LinkedIn scopes are `openid profile w_member_social`. Add `offline_access` to `LINKEDIN_OAUTH_SCOPES` only after the LinkedIn app is approved for refresh tokens.
-  - If LinkedIn redirects to `localhost`, update `LINKEDIN_REDIRECT_URI` in Render and the LinkedIn app dashboard to the deployed Render callback URL.
-  - Put `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` in `apps/api/.env`.
-- X:
-  - Create an app in X Developer Portal and enable OAuth 2.0.
-  - Add `https://your-render-api.onrender.com/oauth/x/callback` as callback URL.
-  - Enable scopes for posting and refresh tokens (`tweet.write`, `users.read`, `offline.access`).
-  - If X shows a generic access error, confirm OAuth 2.0 is enabled, the callback URL matches exactly, and the app has the requested scopes.
-  - Put `X_CLIENT_ID` and `X_CLIENT_SECRET` in `apps/api/.env`.
+## Run the full local stack
 
-## Connector Plugin Contract
+1. Copy `apps/api/.env.example` to `apps/api/.env` and replace placeholders.
+2. Generate `TOKEN_ENCRYPTION_KEY` with Fernet and a unique `SECRET_KEY` of at least 32 characters.
+3. Start PostgreSQL, Redis, and MinIO with `infra/docker-compose.yml`.
+4. Run migrations from `apps/api` with `alembic upgrade head`.
+5. Start FastAPI on `:8000` and an RQ worker for the `publish` and `snapshot` queues.
+6. Set `NEXT_PUBLIC_API_BASE=http://localhost:8000`, then run the web app from `apps/web`.
 
-Connectors implement `app/connectors/base.py`:
+Production startup rejects a short/default signing secret and rejects `DEV_MODE=true`. Developer token-paste endpoints are disabled by default and must never be enabled in production.
 
-- `platform_name`
-- `capabilities() -> { supports_image, supports_link }`
-- `is_enabled(settings)`
-- `get_oauth_authorize_url(state, code_challenge=None)`
-- `exchange_code_for_token(code, code_verifier=None)`
-- `refresh_token_if_needed(account)`
-- `publish_text_link(account, payload)`
-- `get_follower_count(account)`
-- optional `get_follower_list(account)`
+## Deployment shape
 
-Registry: `app/connectors/registry.py`
+The static frontend can be deployed to Netlify using the root `netlify.toml`. The API, worker, PostgreSQL, Redis, and object storage need separate services such as Render-managed components. Required deployment values and provider callback examples are documented in `apps/api/.env.example` and [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
-## How to Add a New Connector
+Deployment is not currently presented as verified. Domains, paid services, provider consoles, credentials, retention policy, and monitoring remain human checkpoints.
 
-1. Create `app/connectors/<platform>.py` implementing `Connector`.
-2. Register it in `app/connectors/registry.py`.
-3. Add platform env vars to `apps/api/.env.example`.
-4. Add OAuth start/callback support (existing generic endpoints can be reused).
-5. Add publish + follower count handling.
-6. Expose platform option in `apps/web/app/accounts/page.tsx`.
+## Provider boundary
+
+- OAuth redirect URIs must match the deployed callback exactly.
+- Requested scopes require provider approval and may vary by account type.
+- Tokens are backend-only and encrypted at rest, but production rotation and revocation still need deployment validation.
+- No scraping is used.
+- Image publishing is currently disabled for Facebook, LinkedIn, and X.
+- Individual unfollower identity is shown only when an official connector can provide it; current analytics use follower-count deltas.
+- Instagram publishing is scaffolded, not complete.
+
+## Documentation
+
+- [Development and setup](docs/DEVELOPMENT.md)
+- [Architecture and trust boundaries](docs/ARCHITECTURE.md)
+- [Testing evidence](docs/TEST_REPORT.md)
+- [Security policy](SECURITY.md)
+- [Case study](docs/CASE_STUDY.md)
+- [Interview guide](docs/INTERVIEW_GUIDE.md)
+- [Demo script and recording acceptance](docs/demo/DEMO_SCRIPT.md)
+- [Contribution guide](CONTRIBUTING.md)
 
 ## Limitations
 
-- No scraping is used.
-- "Who unfollowed" is only possible where official APIs provide follower lists.
-- For most APIs in this MVP, follower tracking is snapshot delta only.
-- OAuth details vary by app permissions and may require platform app review/setup.
-- Instagram publishing is scaffolded only (stub connector).
-- Image posting is disabled for Facebook, LinkedIn, and X in this MVP (text/link only).
+This release does not prove live provider publishing, provider-review approval, production throughput, multi-region resilience, production retention/deletion workflows, or cross-browser visual parity. Windows Chromium is the visually audited desktop environment; CI uses Linux for code/build verification.

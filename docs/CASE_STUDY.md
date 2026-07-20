@@ -1,81 +1,47 @@
 # Social Media Control Center case study
 
-## 1. Project summary
+## Product problem
 
-Social Media Control Center is a monorepo for composing, scheduling, publishing, and analyzing social content through explicit provider connectors. It combines a Next.js web application, FastAPI service, PostgreSQL, Redis/RQ workers, and local object-storage support.
+Publishing one update across multiple networks looks simple until OAuth scopes, content capabilities, rate limits, token expiry, retries, and provider-specific errors become part of the workflow. A UI that reports one global success hides the most important operational truth: each provider can finish differently.
 
-## 2. Problem being solved
+## Approach
 
-Content teams often coordinate drafts, schedules, provider accounts, publishing jobs, and analytics in disconnected tools. Provider-specific OAuth and API behavior make a unified workflow difficult to test and maintain.
+SMCC separates the web experience, application API, queued work, and provider connectors. One post creates a target per selected account. The API validates ownership and connector capabilities before persistence. Workers update each target independently and preserve attempts, errors, and external identifiers.
 
-## 3. Target users
+The core public workflow is deliberately narrow and complete: authenticate, inspect connected-account capabilities, compose text/link content, publish to explicit targets, monitor status progression, and review conservative analytics.
 
-- Small content or marketing teams
-- Operators scheduling posts across supported connectors
-- Developers adding or testing provider adapters
+## Engineering decisions
 
-## 4. Why existing approaches are insufficient
+- Backend-only provider credentials with Fernet-encrypted token storage
+- Connector contract to isolate provider differences
+- PostgreSQL records for durable post and per-target state
+- Redis/RQ jobs with bounded retry intervals
+- Terminal states for failure, rate limit, and reauthentication instead of endless spinners
+- User-scoped queries and explicit cross-user authorization tests
+- Production startup guards for signing secrets and developer mode
+- A separate provider-isolated demo process instead of fake live-provider success
 
-Direct provider calls from a UI entangle credentials, publishing rules, retries, and presentation. A durable system needs an API boundary, queued work, connector contracts, and explicit token handling.
+## Product design changes
 
-## 5. Product approach
+The visual system stayed intact: the same sky palette, cards, typography, controls, and navigation structure remain. The completion pass added a clear product statement, visible form labels, a primary compose path, safe-demo disclosure, capability language, status badges, keyboard focus, reduced motion, and a mobile menu. The 390 px dashboard went from 490 px root width to 390 px without horizontal overflow.
 
-The web client manages content and account workflows. FastAPI validates requests and coordinates persistence. Background workers handle scheduled or retryable jobs. Each network provider implements a connector boundary so OAuth and publishing behavior do not leak across the application.
+## Verification
 
-## 6. System architecture
+- 19 API tests
+- clean frontend lint and production build
+- zero known npm or Python dependency vulnerabilities
+- authorization, unsafe-production-config, OAuth, worker, upload, analytics, and demo-isolation coverage
+- full Chromium workflow with no non-local HTTP requests
+- 245.368-second narrated/captioned walkthrough with 10 inspected frames
 
-The Next.js client calls the FastAPI API. PostgreSQL stores application state; Redis/RQ coordinates background jobs; MinIO-compatible storage supports local media workflows. OAuth callbacks and provider connectors are configured through environment values. See [ARCHITECTURE.md](ARCHITECTURE.md).
+## Honest outcome
 
-## 7. Main engineering decisions
+The repository demonstrates a secure local MVP and a credible provider boundary. It does not prove approved provider apps, live publishing, production scale, retention policy, or hosted observability. Instagram remains a stub and image publishing remains disabled for the three visible connectors.
 
-- Isolate provider behavior behind a connector contract.
-- Keep OAuth tokens and secrets in backend configuration rather than browser code.
-- Use queued workers for scheduled and retryable operations.
-- Provide Compose-oriented local dependencies without treating local credentials as production secrets.
-- Demonstrate the product safely without real publishing accounts.
+## Next engineering steps
 
-## 8. Difficult technical challenges
-
-- Normalizing different provider authorization and publishing contracts
-- Validating callback URLs and state without exposing tokens
-- Coordinating scheduled jobs, retries, and application status
-- Keeping the frontend useful when live provider approval is unavailable
-
-## 9. How those challenges were solved
-
-The API owns redirect validation, state, connector selection, and error mapping. Background execution is separated from request handling. The demo and tests use safe boundaries rather than fabricated successful provider publishing.
-
-## 10. Security and privacy considerations
-
-OAuth credentials and tokens must remain backend secrets. Redirect URIs must match configured public endpoints, and logs must not contain tokens. Real deployments need encrypted token storage, provider scope review, rate limiting, deletion/retention controls, and incident handling. The current video does not use a real account.
-
-## 11. Testing strategy
-
-Eleven API tests pass, the web lint command passes, and the Next.js production build completes. Current tests cover the verified API/configuration behavior; live provider contracts require approved sandbox accounts or mocked contract fixtures.
-
-## 12. Performance considerations
-
-Queued work prevents long provider calls from blocking interactive requests. Scaling would require measuring queue latency, provider rate limits, database contention, media size, and retry behavior. No production throughput claim is made.
-
-## 13. Current limitations
-
-- Real OAuth/provider approval and publishing were not verified.
-- The video shows the real entry surface, not a fabricated provider success.
-- Production token encryption, rate limits, monitoring, and retention policy need deployment-specific work.
-- Connector contract and worker integration tests should be expanded.
-
-## 14. Results demonstrated
-
-The repository demonstrates a coherent full-stack monorepo, provider connector architecture, background-job boundary, 11 passing API tests, clean web lint, a successful production build, CI, and a captioned application video.
-
-## 15. What the developer learned
-
-External integrations should be designed as failure-prone boundaries. Authentication, retries, scopes, and provider-specific responses need explicit contracts rather than optimistic UI assumptions.
-
-## 16. Next engineering steps
-
-1. Add mocked contract tests for every connector and OAuth callback.
-2. Add encrypted token storage and rotation/revocation workflows.
-3. Add queue observability, idempotency keys, and retry/dead-letter policies.
-4. Add rate limiting and media validation before any public deployment.
-5. Run an approved sandbox end-to-end test for each provider.
+1. Validate each connector against an approved sandbox and store redacted contract fixtures.
+2. Add idempotency keys, dead-letter inspection, and queue metrics.
+3. Add cursor pagination and asset lifecycle controls.
+4. Verify token rotation/revocation and deletion/retention behavior in a staged deployment.
+5. Run cross-browser and assistive-technology audits.

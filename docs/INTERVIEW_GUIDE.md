@@ -2,7 +2,7 @@
 
 ## Tell me about this project.
 
-It is a Next.js/FastAPI monorepo for composing, scheduling, and analyzing social content through connector and background-worker boundaries.
+It is a Next.js/FastAPI monorepo for composing, publishing, and analyzing social content through connector and background-worker boundaries.
 
 ## Why did you build it?
 
@@ -26,7 +26,7 @@ Add connector contract fixtures, encrypted token storage, idempotency, dead-lett
 
 ## How did you test it?
 
-Eleven API tests, web lint, and the production web build pass. No live provider success is fabricated in the video.
+Nineteen API tests, dependency audits, web lint, the production build, responsive checks, and the provider-isolated Chromium workflow pass. No live provider success is fabricated in the video.
 
 ## What are its security limitations?
 

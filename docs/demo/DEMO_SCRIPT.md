@@ -1,16 +1,30 @@
 # Social Media Control Center demo script
 
-**Target length:** 60–90 seconds  
-**Format:** Browser  
-**Data:** synthetic, repository-provided demo data, or public non-personal examples only
+**Target length:** 4–5 minutes
+
+**Format:** Real Chromium workflow with generated narration and WebVTT captions
+
+**Data:** Deterministic synthetic workspace; all provider calls disabled
 
 ## Walkthrough
 
-1. **Title (0–5s):** Show “Social Media Control Center” and its one-sentence problem statement.
-2. **Starting state (5–15s):** Show the clean entry point and identify the intended user.
-3. **Primary workflow (15–55s):** Open the dashboard; compose a synthetic post; show scheduling/account/analytics surfaces without authenticating a real provider; explain connector and OAuth boundaries.
-4. **Architecture (55–75s):** Show the architecture guide and name the main runtime boundaries.
-5. **Close (75–90s):** Display the project name, badugujashwanth-create, current status, and one honest limitation.
+1. Open the login surface and state the safe-demo boundary.
+2. Sign in and review the three-account dashboard.
+3. Inspect simulated provider accounts, capability labels, and disabled OAuth actions.
+4. Open the composer and explain content, link, media, and target validation.
+5. Compose the Northstar release update and select all three accounts.
+6. Queue publishing and show the per-target `publishing` state.
+7. Wait for deterministic `success` results and synthetic external IDs.
+8. Inspect historical second-attempt evidence.
+9. Review daily posts and follower snapshot deltas with their stated limitations.
+10. Return to the dashboard and summarize verified evidence and external gates.
 
-Do not show environment files, tokens, browser bookmarks, notifications, real user accounts, or private URLs. Do not edit the footage to imply an integration succeeded when it did not.
+Never expose environment files, provider credentials, personal accounts, unrelated applications, notifications, or private URLs. Never edit the recording to imply a live provider succeeded.
 
+## Record
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\record-demo.ps1
+```
+
+Use `-SmokeOnly` first. The full command builds the production static export, starts isolated local services, verifies the API flow, records Chromium, adds narration, extracts inspection frames, validates audio/video, and writes a SHA-256 checksum.

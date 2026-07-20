@@ -30,6 +30,7 @@ export default function ComposePage() {
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [uploadFileName, setUploadFileName] = useState<string | null>(null);
   const { register, handleSubmit, formState, watch } = useForm<FormData>({ resolver: zodResolver(schema) });
+  const textValue = watch('text') || '';
 
   const linkValue = watch('link_url');
 
@@ -128,13 +129,25 @@ export default function ComposePage() {
       <h1 className='mb-4 text-2xl font-semibold'>Post Composer</h1>
       <Card className='mb-6'>
         <form className='space-y-4' onSubmit={handleSubmit(onSubmit)}>
-          <Textarea placeholder='Write your post' {...register('text')} />
-          <Input placeholder='Optional link URL' {...register('link_url')} />
+          <div className='space-y-1'>
+            <div className='flex items-center justify-between gap-3'>
+              <label htmlFor='post-text' className='text-sm font-medium'>Post content</label>
+              <span className='text-xs text-gray-500'>{textValue.length}/5000</span>
+            </div>
+            <Textarea id='post-text' placeholder='Share an update with your connected audiences' {...register('text')} />
+          </div>
+          <div className='space-y-1'>
+            <label htmlFor='post-link' className='text-sm font-medium'>Link <span className='font-normal text-gray-500'>(optional)</span></label>
+            <Input id='post-link' placeholder='https://example.com/update' {...register('link_url')} />
+          </div>
 
           <div className='space-y-2'>
+            <label htmlFor='post-image' className='text-sm font-medium'>Image <span className='font-normal text-gray-500'>(optional)</span></label>
             <input
+              id='post-image'
               type='file'
               accept='image/*'
+              className='block w-full rounded-md border border-border bg-white text-sm text-gray-600 file:mr-3 file:border-0 file:border-r file:border-border file:bg-gray-50 file:px-4 file:py-2.5 file:font-medium file:text-gray-800 hover:file:bg-gray-100'
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) {
@@ -142,6 +155,7 @@ export default function ComposePage() {
                 }
               }}
             />
+            <p className='text-xs text-gray-500'>Available only when every selected connector supports image publishing.</p>
             {mediaUrl && (
               <div className='rounded border border-border p-2 text-sm'>
                 <p className='font-medium'>Image attached: {uploadFileName || 'uploaded image'}</p>
@@ -214,6 +228,7 @@ export default function ComposePage() {
           <Button type='submit' disabled={formState.isSubmitting || uploading || !canSubmit}>
             {formState.isSubmitting ? 'Publishing...' : postToAll ? 'Post to All' : 'Post to Selected'}
           </Button>
+          <p className='text-xs text-gray-500'>Publishing is queued per target. One provider failure does not hide results for the others.</p>
         </form>
       </Card>
     </ProtectedPage>

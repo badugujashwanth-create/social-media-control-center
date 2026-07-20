@@ -23,6 +23,8 @@ jobs:
           cache-dependency-path: apps/api/requirements.txt
       - run: python -m pip install -r requirements.txt
       - run: python -m pytest -q
+      - run: python -m pip install pip-audit
+      - run: python -m pip_audit -r requirements.txt
 
   web:
     runs-on: ubuntu-latest
@@ -37,6 +39,41 @@ jobs:
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
+      - run: npm audit --audit-level=moderate
       - run: npm run lint
       - run: npm run build
 
+  safe-demo:
+    runs-on: ubuntu-latest
+    needs: [api, web]
+    env:
+      NEXT_PUBLIC_API_BASE: http://127.0.0.1:8011
+      NEXT_PUBLIC_DEMO_MODE: 'true'
+      NEXT_PUBLIC_DEV_MODE: 'false'
+      DEMO_BASE_URL: http://127.0.0.1:3100
+      DEMO_FAST: 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: apps/api/requirements.txt
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: python -m pip install -r apps/api/requirements.txt
+      - run: npm ci
+        working-directory: apps/web
+      - run: npm run build
+        working-directory: apps/web
+      - run: nohup python scripts/demo_api.py > demo-api.log 2>&1 &
+      - run: nohup python scripts/static_server.py > static-server.log 2>&1 &
+      - run: python scripts/verify_demo_workflow.py
+      - run: curl --fail --retry 20 --retry-delay 1 http://127.0.0.1:3100/login
+      - run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - run: npm run test:demo
+        working-directory: apps/web

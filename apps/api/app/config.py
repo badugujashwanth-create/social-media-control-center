@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pydantic import Field
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,7 +27,7 @@ class Settings(BaseSettings):
     s3_public_base: str = Field(default='http://localhost:9000/smcc', alias='S3_PUBLIC_BASE')
 
     access_token_expire_minutes: int = Field(default=60 * 24, alias='ACCESS_TOKEN_EXPIRE_MINUTES')
-    dev_mode: bool = Field(default=True, alias='DEV_MODE')
+    dev_mode: bool = Field(default=False, alias='DEV_MODE')
 
     facebook_client_id: str | None = Field(default=None, alias='FACEBOOK_CLIENT_ID')
     facebook_client_secret: str | None = Field(default=None, alias='FACEBOOK_CLIENT_SECRET')
@@ -45,6 +46,16 @@ class Settings(BaseSettings):
     ayrshare_api_key: str | None = Field(default=None, alias='AYRSHARE_API_KEY')
 
     app_rate_limit: str = Field(default='120/minute', alias='APP_RATE_LIMIT')
+
+    @model_validator(mode='after')
+    def validate_production_safety(self):
+        if self.environment.lower() != 'production':
+            return self
+        if self.secret_key == 'change-me' or len(self.secret_key) < 32:
+            raise ValueError('Production SECRET_KEY must be a unique value of at least 32 characters')
+        if self.dev_mode:
+            raise ValueError('DEV_MODE must be false in production')
+        return self
 
 
 @lru_cache

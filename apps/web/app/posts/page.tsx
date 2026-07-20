@@ -5,6 +5,7 @@ import { ProtectedPage } from '@/components/protected-page';
 import { Card } from '@/components/ui/card';
 import { apiFetch } from '@/lib/api';
 import { OAuthAccount, Post } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
 
 const TERMINAL = new Set(['success', 'failed', 'needs_reauth', 'rate_limited']);
 const ERROR_MESSAGES: Record<string, string> = {
@@ -19,6 +20,12 @@ function formatError(code: string | null, message: string | null): string {
   if (!code) return message || '-';
   const friendly = ERROR_MESSAGES[code] || 'Publishing failed.';
   return message ? `${friendly} (${message})` : friendly;
+}
+
+function statusClass(status: string): string {
+  if (status === 'success') return 'border-emerald-200 bg-emerald-50 text-emerald-800';
+  if (status === 'publishing' || status === 'queued') return 'border-sky-200 bg-sky-50 text-sky-800';
+  return 'border-amber-200 bg-amber-50 text-amber-900';
 }
 
 export default function PostsPage() {
@@ -68,7 +75,7 @@ export default function PostsPage() {
   return (
     <ProtectedPage>
       <h1 className='mb-4 text-2xl font-semibold'>Post History</h1>
-      <div className='space-y-3'>
+      <div className='space-y-3' aria-live='polite'>
         {posts.map((post) => (
           <Card key={post.id}>
             <p className='font-medium'>{post.text}</p>
@@ -91,7 +98,7 @@ export default function PostsPage() {
                     <tr key={target.id} className='border-b align-top'>
                       <td className='py-2 pr-3'>{target.platform}</td>
                       <td className='py-2 pr-3'>{accountNameById.get(target.oauth_account_id) || `Account #${target.oauth_account_id}`}</td>
-                      <td className='py-2 pr-3'>{target.status}</td>
+                      <td className='py-2 pr-3'><Badge className={statusClass(target.status)}>{target.status}</Badge></td>
                       <td className='py-2 pr-3'>{target.external_post_id || '-'}</td>
                       <td className='py-2 pr-3'>{target.attempts}</td>
                       <td className='py-2 pr-3'>{formatError(target.error_code, target.error_message)}</td>

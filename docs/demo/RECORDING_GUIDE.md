@@ -1,18 +1,21 @@
 # Recording guide
 
-## Preparation
+The recorder owns its local demo processes and stops them after completion. Run it only when ports `3100` and `8011` are free, or pass `-UseExistingServices` for already healthy compatible services.
 
-1. Install dependencies using docs/DEVELOPMENT.md.
-2. Copy example environment files and use only local or synthetic values.
-3. Start the demo with scripts/run-demo.ps1 or the component-specific command.
-4. Confirm the complete workflow manually before recording.
-5. Close notifications, unrelated applications, password managers, and personal browser profiles.
+## Credit-saving sequence
 
-## Record
+1. Run API tests, web lint/build, dependency audits, and the tracked-file secret scan.
+2. Run `scripts\record-demo.ps1 -SmokeOnly -SkipBrowserInstall`.
+3. Fix any workflow failure and rerun the smallest affected test.
+4. Run the full recorder once.
+5. Inspect every extracted frame before accepting the asset.
 
-For a web-capable build, run scripts/record-demo.ps1 with the healthy local BaseUrl. The Playwright specification captures an overview screenshot, thumbnail, and WebM video. Review every frame before committing it.
+## Acceptance
 
-## Post-production
-
-Trim loading time only; do not splice in fake success states. Add demo-captions.vtt. If FFmpeg is available, create a compressed MP4 and preview GIF, then verify size and readability. Never commit a large raw capture.
-
+- At least 180 seconds
+- 1280×720 video
+- VP9 video and Opus audio
+- Captions and thumbnail present
+- Ten inspected frames show the intended browser state
+- No secrets, unrelated windows, personal data, or provider-success implication
+- Verification JSON and SHA-256 checksum match the final WebM
