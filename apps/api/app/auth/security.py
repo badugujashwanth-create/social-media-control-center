@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 import bcrypt
-from jose import jwt
+import jwt
 from app.config import get_settings
 
 settings = get_settings()

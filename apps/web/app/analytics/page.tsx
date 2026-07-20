@@ -48,10 +48,11 @@ export default function AnalyticsPage() {
   return (
     <ProtectedPage>
       <h1 className='mb-4 text-2xl font-semibold'>Analytics</h1>
+      <p className='mb-4 text-sm text-gray-600'>Follower changes are snapshot deltas from official APIs when available; they are not a claim about individual unfollowers.</p>
 
       <div className='mb-4'>
         <Button disabled={submitting} onClick={triggerSnapshot}>
-          {submitting ? 'Running snapshot...' : 'Trigger follower snapshot (dev)'}
+          {submitting ? 'Running snapshot...' : 'Capture follower snapshot'}
         </Button>
       </div>
 

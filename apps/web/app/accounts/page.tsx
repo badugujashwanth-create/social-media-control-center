@@ -33,6 +33,7 @@ export default function AccountsPage() {
   const [savingPage, setSavingPage] = useState(false);
 
   const devMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+  const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
   const { register, handleSubmit, reset, formState } = useForm<ManualForm>({
     resolver: zodResolver(manualSchema),
     defaultValues: { platform: 'facebook' },
@@ -132,14 +133,15 @@ export default function AccountsPage() {
 
       <Card className='mb-6'>
         <h2 className='mb-2 text-lg font-semibold'>Connect via OAuth</h2>
+        <p className='mb-3 text-sm text-gray-600'>Provider approval and configured callback URLs are required before live accounts can be connected.</p>
         <div className='flex flex-wrap gap-2'>
-          <Button onClick={() => oauthStart('facebook')}>Connect Facebook</Button>
-          <Button onClick={() => oauthStart('linkedin')}>Connect LinkedIn</Button>
-          <Button onClick={() => oauthStart('x')}>Connect X</Button>
+          <Button disabled={demoMode} onClick={() => oauthStart('facebook')}>{demoMode ? 'Facebook unavailable in demo' : 'Connect Facebook'}</Button>
+          <Button disabled={demoMode} onClick={() => oauthStart('linkedin')}>{demoMode ? 'LinkedIn unavailable in demo' : 'Connect LinkedIn'}</Button>
+          <Button disabled={demoMode} onClick={() => oauthStart('x')}>{demoMode ? 'X unavailable in demo' : 'Connect X'}</Button>
         </div>
       </Card>
 
-      {devMode && (
+      {devMode && !demoMode && (
         <Card className='mb-6'>
           <h2 className='mb-2 text-lg font-semibold'>Developer Mode: Paste Access Token</h2>
           <form onSubmit={handleSubmit(onManual)} className='grid grid-cols-1 gap-2 md:grid-cols-2'>
@@ -165,16 +167,18 @@ export default function AccountsPage() {
                 <div className='flex items-center gap-2'>
                   <Badge>{a.platform}</Badge>
                   <p className='font-medium'>{a.display_name || a.external_account_id}</p>
+                  {a.meta_json?.source === 'synthetic_demo' && <Badge>Simulated</Badge>}
                 </div>
                 <p className='text-sm text-gray-600'>Account ID: {a.external_account_id}</p>
                 <p className='text-sm text-gray-600'>
-                  Capabilities: {a.capabilities.supports_link ? 'link ' : ''}{a.capabilities.supports_image ? 'image' : 'no image'}
+                  Capabilities: {a.capabilities.supports_link ? 'Links' : 'No links'} · {a.capabilities.supports_image ? 'Images' : 'Text only'}
                 </p>
                 <p className='text-sm text-gray-600'>
                   Token expiry: {a.expires_at ? new Date(a.expires_at).toLocaleString() : 'Not provided'}
                 </p>
               </div>
               <Button
+                disabled={demoMode}
                 variant='outline'
                 onClick={async () => {
                   try {
@@ -186,7 +190,7 @@ export default function AccountsPage() {
                   }
                 }}
               >
-                Disconnect
+                {demoMode ? 'Locked in demo' : 'Disconnect'}
               </Button>
             </div>
           ))}

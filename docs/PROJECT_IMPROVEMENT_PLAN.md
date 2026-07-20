@@ -1,35 +1,25 @@
-# Project Improvement Plan
+# Project improvement plan
 
-## Current state
+## Completed in v1.0.0
 
-The product has a real API/web split, connector abstraction, scheduling and job state, and 11 meaningful API tests. Live publishing cannot be represented as universally verified.
+- Provider-isolated end-to-end browser workflow with deterministic data
+- Explicit demo/provider/analytics boundaries in the interface
+- Mobile navigation and 390 px reflow repair
+- Visible labels, focus treatment, reduced motion, status communication, and clearer primary action
+- Cross-user authorization tests and production configuration guards
+- Secure dependency upgrades and clean npm/pip audits
+- 4:05 narrated walkthrough with captions, checksum, and inspected frames
+- CI dependency audits and safe-demo browser smoke
 
-## Findings
+## Remaining P1 work
 
-- **Works:** content workflow, connector boundary, queue/state transitions, errors, web build/lint, and safe demo evidence.
-- **Does not / missing:** comprehensive role permissions, rich asset lifecycle, real-provider rate-limit testing, and end-to-end browser automation.
-- **UX / architecture:** coherent workflow; provider capabilities and simulated actions need persistent labels.
-- **Testing / security:** API tests are useful. OAuth scopes, token storage, authorization, and replay behavior need provider-specific review before real accounts are enabled.
-- **Performance / docs / demo:** unbounded history could eventually need pagination. Docs/video are strong; provider credentials are the live-demo blocker.
+- Approved sandbox contract verification for each live connector
+- Idempotency keys, queue metrics, and dead-letter inspection
+- Token rotation/revocation workflow and staged deletion/retention verification
+- Upload type/size scanning and complete media lifecycle
+- Cursor pagination for posts and bounded asset search
+- Manual screen-reader, zoom, and cross-browser audit
 
-## Recommendations
+## Explicitly excluded from the current claim
 
-### Critical
-
-- Preserve the explicit separation between synthetic demo actions and real publishing.
-- Keep CI on API tests plus frontend lint/build; fail clearly when credentials are absent.
-
-### High value
-
-- Add a browser smoke test for create, approve/schedule, status progression, and failure recovery.
-- Add authorization tests if multi-user roles become public.
-
-### Optional
-
-- Add bounded analytics and asset search after core scheduling evidence is stable.
-
-## Delivery constraints
-
-- **Priority:** demo honesty and core workflow; **complexity:** medium; **dependencies:** Node and optional authorized provider sandboxes.
-- **Acceptance:** core CI passes, demo never contacts providers, live integrations are accurately labeled, and no token is committed.
-- **Excluded:** claiming every social network, automated real posting from portfolio CI, and vanity analytics.
+Scheduling, universal image publishing, live provider approval, production scale, and individual-unfollower identity are not implemented or claimed.

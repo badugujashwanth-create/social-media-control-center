@@ -29,7 +29,7 @@ def user_rate_limit_key(request: Request) -> str:
 limiter = Limiter(key_func=user_rate_limit_key, default_limits=[settings.app_rate_limit])
 app = FastAPI(
     title='Social Media Control Center API',
-    version='0.1.0',
+    version='1.0.0',
     openapi_tags=[
         {'name': 'auth', 'description': 'Application authentication'},
         {'name': 'accounts', 'description': 'Connected social accounts and OAuth'},

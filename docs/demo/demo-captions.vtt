@@ -1,16 +1,31 @@
 WEBVTT
 
-00:00.000 --> 00:05.000
-Social Media Control Center
+00:00:00.000 --> 00:00:22.000
+This walkthrough uses a deterministic synthetic workspace. No social provider is contacted.
 
-00:05.000 --> 00:15.000
-The problem, intended user, and starting point.
+00:00:22.000 --> 00:00:49.000
+The dashboard summarizes account readiness and recent activity, with composition as the primary action.
 
-00:15.000 --> 00:37.000
-A walkthrough of the primary workflow using safe demonstration data.
+00:00:49.000 --> 00:01:20.000
+Provider accounts expose capabilities and are visibly marked simulated; OAuth is disabled in demo mode.
 
-00:37.000 --> 00:48.000
-Architecture, technology boundaries, and verified behavior.
+00:01:20.000 --> 00:01:58.000
+The composer validates content, optional links, media support, and the exact selected targets.
 
-00:48.000 --> 00:57.000
-Current status, known limitation, and repository owner badugujashwanth-create.
+00:01:58.000 --> 00:02:17.000
+Each provider target enters publishing without an optimistic success claim.
+
+00:02:17.000 --> 00:02:49.000
+Deterministic results complete with synthetic external identifiers; no provider endpoint was called.
+
+00:02:49.000 --> 00:03:10.000
+Historical retry evidence preserves attempts and terminal status per target.
+
+00:03:10.000 --> 00:03:46.000
+Analytics reports application counts and follower snapshot deltas, not individual unfollower claims.
+
+00:03:46.000 --> 00:04:05.000
+Tests, builds, audits, secret scanning, responsive checks, and browser automation support the local MVP claim.
+
+00:04:05.000 --> 00:04:22.000
+Provider approval, live OAuth, deployment, retention, and operations remain explicit external gates.

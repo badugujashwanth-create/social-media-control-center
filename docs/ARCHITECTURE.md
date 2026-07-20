@@ -1,31 +1,51 @@
 # Social Media Control Center architecture
 
-Full-stack control center for composing, scheduling, publishing, and analyzing social content through pluggable connectors.
-
 ## System view
 
 ```mermaid
 flowchart LR
-  N0[Social media manager] --> N1
-  N1[Next.js web app] --> N2
-  N2[FastAPI REST API] --> N3
-  N3[Connector and job layers] --> N4
-  N4[PostgreSQL, Redis, object storage]
+  U[Content operator] --> W[Next.js web app]
+  W --> A[FastAPI REST API]
+  A --> P[(PostgreSQL)]
+  A --> O[(Object storage)]
+  A --> Q[Redis / RQ]
+  Q --> C[Provider connector]
+  C --> X[Approved provider API]
 ```
 
-## Component boundaries
+## Primary workflow
 
-- **Social media manager:** initiates the primary workflow.
-- **Next.js web app:** owns one stage of the request or interaction flow.
-- **FastAPI REST API:** owns one stage of the request or interaction flow.
-- **Connector and job layers:** owns one stage of the request or interaction flow.
-- **PostgreSQL, Redis, object storage:** provides the terminal integration or persistence boundary.
+The browser sends one validated post request. The API resolves only accounts owned by the signed-in user, validates connector capabilities, persists one `Post`, and creates a `PostTarget` per account. Each target is enqueued independently. Workers move targets through `queued`, `publishing`, and a terminal status: `success`, `failed`, `rate_limited`, or `needs_reauth`.
 
-## Runtime and trust boundaries
+This model prevents one provider result from overwriting another and makes retry evidence visible through attempts and external IDs.
 
-Real OAuth and publishing require provider-owned credentials and review; some connectors are stubs or demo implementations. Inputs crossing a network, filesystem, provider, or database boundary should be validated and logged without sensitive values. Optional integrations must fail clearly rather than being presented as successful.
+## Trust boundaries
 
-## Technology
+- **Browser → API:** application bearer token; browser never receives provider secrets.
+- **API → database:** users, encrypted OAuth tokens, posts, targets, follower snapshots.
+- **API → queue:** numeric target identifiers and bounded retry policy.
+- **Worker → connector:** decrypted token only inside the backend process.
+- **Connector → provider:** live network boundary requiring approved credentials and scopes.
+- **Media → object storage:** authenticated upload boundary; deployment-specific size, malware, and retention controls remain required.
 
-Next.js/TypeScript, FastAPI/Python, SQLAlchemy, Redis/RQ, PostgreSQL, MinIO.
+## Safe demo architecture
 
+`scripts/demo_api.py` is a separate deterministic FastAPI process. It does not import connector code, does not read provider environment variables, and does not perform outbound requests. It resets synthetic state at sign-in and advances a created target from publishing to success after a fixed interval. OAuth start endpoints return an explicit blocked response.
+
+The browser workflow additionally records every HTTP request and fails if any non-local host is contacted.
+
+## Security controls
+
+- bcrypt password hashing with 12 rounds
+- bounded password input length
+- PyJWT HS256 application tokens
+- Fernet encryption for stored provider tokens
+- production startup rejection for default/short signing keys or enabled developer mode
+- user-scoped account, post, and analytics queries
+- OAuth state and production redirect validation
+- CORS allow-list and request rate limiting
+- generic 500 responses that do not disclose exception details
+
+## Scaling limits
+
+The current release limits post history to 50 and dashboard history to 10, but does not yet provide cursor pagination. Production scale would require queue-latency metrics, idempotency keys, dead-letter inspection, upload policies, database indexes validated under load, provider-specific rate budgets, and operational dashboards. No throughput number is claimed.
