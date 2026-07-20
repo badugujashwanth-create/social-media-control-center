@@ -52,7 +52,7 @@ test('real safe-demo workflow reaches deterministic per-provider results', async
   await page.screenshot({ path: path.join(outputDir, '05-compose-ready.png') });
   await page.getByRole('button', { name: 'Post to All' }).click();
 
-  await expect(page).toHaveURL(/\/posts\?postId=103$/);
+  await expect(page).toHaveURL(/\/posts\/?\?postId=103$/);
   const latestPost = page.locator('main').locator('div.rounded-lg').filter({ hasText: 'Northstar release' }).first();
   await expect(latestPost).toContainText('publishing');
   await page.screenshot({ path: path.join(outputDir, '06-publishing-progress.png') });

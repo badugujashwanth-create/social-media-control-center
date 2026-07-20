@@ -74,7 +74,7 @@ test('complete provider-isolated content workflow', async ({ page }) => {
   await hold(page, 25_000);
 
   await page.getByRole('button', { name: 'Post to All' }).click();
-  await expect(page).toHaveURL(/\/posts\?postId=103$/);
+  await expect(page).toHaveURL(/\/posts\/?\?postId=103$/);
   const current = page.locator('main').locator('div.rounded-lg').filter({ hasText: 'Northstar release' }).first();
   await expect(current.getByText('publishing', { exact: true })).toHaveCount(3);
   await capture(page, '06-publishing-progress');
