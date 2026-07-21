@@ -2,7 +2,9 @@
 
 > **Status: verified local MVP.** The application, API, worker boundaries, safe demo, tests, build, and audits are verified. Live social publishing is not claimed; it still requires approved provider apps, credentials, and sandbox validation.
 
-[![Watch the 4-minute Social Media Control Center walkthrough](docs/demo/demo-thumbnail.png)](docs/demo/demo.webm)
+[![Watch the 4-minute Social Media Control Center walkthrough](docs/demo/demo-thumbnail.png)](https://jashwanth-portfolio-ten.vercel.app/work/social-media-control-center/)
+
+[Open MP4](https://jashwanth-portfolio-ten.vercel.app/media/social-media-control-center/demo.mp4) · [Download WebM](https://jashwanth-portfolio-ten.vercel.app/media/social-media-control-center/demo.webm) · [Captions](https://jashwanth-portfolio-ten.vercel.app/media/social-media-control-center/demo-captions.vtt)
 
 The walkthrough runs the real Next.js interface against a deterministic local demo API. Every account, publishing result, external ID, and chart is synthetic, and the verifier confirms that no social provider is contacted.
 
